@@ -1,0 +1,155 @@
+<.header>
+  Welcome to S3Gui
+</.header>
+
+<form id="upload-form" phx-submit="save" phx-change="validate" class="w-full" x-data="{}">
+  <div class="flex flex-col gap-2 h-[50vh] md:h-[70vh]">
+    <!-- Row 1 -->
+    <div class="flex flex-col md:flex-row gap-2 flex-shrink">
+      <div class="w-full">
+        <!-- Left Side of Row 1 -->
+        <div class="flex flex-col w-full h-[50vh] md:h-[70vh]">
+          <.field
+            name="file-select"
+            value={if not is_nil(@current_group), do: URI.encode(@current_group), else: "/"}
+            label=""
+            type="select"
+            options={get_groups(@current_user)}
+            phx-change="file-set-change"
+          />
+          <div class="flex flex-col md:flex-row">
+          <.p>Drop files below to upload or use the browse button</.p><.link phx-click="create-folder" class="md:ml-2 flex-grow md:text-right"><Heroicons.folder_plus class="h-5 w-5 inline mr-1" />Create folder...</.link>
+          </div>
+          <div
+            class="border-solid border overflow-y-scroll md:h-full border-gray-200 rounded-lg p-3"
+            phx-drop-target={@uploads.files.ref}
+            phx-hook="DropTarget"
+            id="landing-upload"
+          >
+            <ol phx-update="stream" id="files">
+              <%= if not is_nil(@parent_url) do %>
+                <li class="hover:bg-stone-100" id="traverse_up">
+                  <.link navigate={"#{@parent_url}"}>
+                    <div class="flex flex-row">
+                      <div class="mr-1"><Heroicons.folder class="h-4 w-4 inline" /></div>
+                      <div class="flex-grow">../</div>
+                    </div>
+                  </.link>
+                </li>
+              <% end %>
+              <li class="hover:bg-stone-100"
+                    :for={{dom_id, folder} <- @streams.folders}
+                    id={dom_id}
+              >
+                <div class="flex flex-row">
+                  <div class="mr-1">
+                    <.checkbox_for_key key={folder.key} selected_key={@selected_key} />
+                  </div>
+                  <.link navigate={get_folder_url(@current_prefix, @current_group, folder.name)}>
+                    <div class="flex flex-row">
+                      <div class="mr-1 inline"><Heroicons.folder class="h-4 w-4 inline" /></div>
+                      <div class="flex-grow"><%= folder.name %></div>
+                    </div>
+                  </.link>
+                </div>
+              </li>
+              <li class="hover:bg-stone-100"
+                    :for={{dom_id, file} <- @streams.files}
+                    id={dom_id}
+              >
+                <div class="flex flex-row">
+                  <div class="mr-1">
+                    <.checkbox_for_key key={file.key} selected_key={@selected_key} />
+                  </div>
+                  <div class="mr-1"><Heroicons.document class="h-4 w-4 inline" /></div>
+                  <div class="flex-grow"><%= file.name %></div>
+                  <div><%= Size.humanize!(String.to_integer(file.size)) %></div>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class={
+        if is_nil(@selected_key),
+          do: "hidden w-full md:w-1/3 h-[50vh] md:h-[70vh]",
+          else: "flex w-full md:w-1/3 h-[50vh] md:h-[70vh]"
+      }>
+        <!-- Right side of Row 1-->
+        <div class="flex flex-col w-full md:h-full">
+          <.h4>Actions</.h4>
+          <.p>Actions you can perform on the selected file</.p>
+          <div class="flex md:h-full">
+            <div class="w-full border-solid border overflow-y-scroll border-gray-200 rounded-lg p-3">
+              <ol class="space-y-2">
+                <%= if file_selected?(@selected_key) do %>
+                  <li>
+                    <.link phx-click="share">
+                      <Heroicons.link class="h-6 w-6 inline mr-2" /> Share
+                    </.link>
+                  </li>
+                  <li>
+                    <.link href={@download_url} target="_blank">
+                      <Heroicons.document_arrow_down class="h-6 w-6 inline mr-2" /> Download
+                    </.link>
+                  </li>
+                <% end %>
+                <li>
+                  <.link
+                    phx-click="delete-object"
+                    data-confirm="Are you sure you want to delete this object and all its children?"
+                  >
+                    <Heroicons.trash class="h-6 w-6 inline mr-2" /> Delete
+                  </.link>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Row 2 Upload Row -->
+    <div class="flex flex-initial w-full pb-5">
+      <div class="flex flex-col w-full">
+        <.live_file_input upload={@uploads.files} />
+        <%= for entry <- @uploads.files.entries do %>
+          <div class="flex flex-row items-center gap-2">
+            <%= entry.client_name %>
+            <.progress
+              size="xl"
+              color="primary"
+              value={entry.progress}
+              max={100}
+              label={"#{entry.progress}%"}
+              class="mt-2 mb-2 flex-grow"
+            />
+
+            <div class="inline">
+              <Heroicons.stop
+                solid
+                class="w-5 h-5"
+                phx-click="cancel-upload"
+                phx-value-ref={entry.ref}
+                aria-label="cancel"
+              />
+            </div>
+          </div>
+
+          <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
+          <%= for err <- upload_errors(@uploads.files, entry) do %>
+            <p class="text-red-500"><%= inspect(err) %></p>
+          <% end %>
+        <% end %>
+        <.button label="Upload" class="mt-2" />
+      </div>
+    </div>
+  </div>
+</form>
+
+<%= if @create_folder_modal do %>
+  <.live_component module={S3GuiWeb.CreateFolderModal} current_user={@current_user} current_prefix={@current_prefix} id="create_folder_modal" />
+<% end %>
+
+<%= if @share_modal do %>
+  <.live_component module={S3GuiWeb.ShareModal} current_user={@current_user} key={@selected_key} id="share_modal" />
+<% end %>

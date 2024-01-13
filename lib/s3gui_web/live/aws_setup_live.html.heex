@@ -1,0 +1,41 @@
+<.header>
+  Setup your AWS information
+</.header>
+
+<div>
+      <.h2 class="font-bold">Step 1</.h2>
+      <.p class="mb-2">Please provide the following aws account information.</.p>
+
+      <.form for={@form} phx-change="validate" phx-submit="save" id="aws-info-form">
+        <.field type="text" field={@form[:aws_account_id]} label="AWS account ID in which you want the S3Gui files stored" />
+        <.field type="select" field={@form[:aws_region]} options={S3GuiData.Aws.Regions.regions()} label="AWS Region where you would like your S3Gui files stored" />
+
+        <div class="mt-5">
+          <.button phx-disable-with="Saving..." label={if not is_nil(@account.aws_account_id), do: "Save", else: "Next"} />
+        </div>
+      </.form>
+
+      <%= if not is_nil(@account.aws_account_id) and not is_nil(@account.aws_region) do %>
+      <.h2 class="mt-10 font-bold">Step 2</.h2>
+      <.p>We need to setup a role with an inline policy that S3Gui will be able to use to setup roles for users and store and retrieve files.</.p>
+      <.p class="mt-5">Please download the following script and then run it.
+        (Note: You will need to have the AWS CLI installed and authenticated with a user with permissions to list and create roles and inline role policies)
+      </.p>
+      <div class="ml-5 mt-5">
+        <.link href="/aws-setup/install-script/" target="_blank">Download install script</.link>
+        <code class="ml-5 mb-5 whitespace-pre-line">
+          bash &lt;location where you saved the install script&gt;
+        </code>
+      </div>
+
+      <.button phx-click="verify-aws-access" phx-disable-with="Checking..." label="Verify AWS Access" />
+      <% end %>
+
+      <%= if @account.aws_setup_confirmed do %>
+        <.h2 class="mt-10 font-bold">Step 3</.h2>
+        <.p>Your S3Gui account is all set to go. Click below to Get Started!</.p>
+        <div class="mt-5">
+          <.button link_type="live_redirect" to="/" label="Get started!" />
+        </div>
+      <% end %>
+</div>

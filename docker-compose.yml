@@ -1,0 +1,40 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:12.4
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+  pgadmin:
+    image: dpage/pgadmin4:7.0
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@metrist.io
+      PGADMIN_DEFAULT_PASSWORD: 123qwe
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - 3002:80
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+  idp:
+    image: kenchan0130/simplesamlphp
+    container_name: idp
+    ports:
+      - "4543:8080"
+    volumes:
+      - idp:/var/www/simplesamlphp
+    environment:
+      SIMPLESAMLPHP_SP_ENTITY_ID: https://localhost:4443/sso/sp/metadata/76e3dfc5-bb6f-43d9-ba37-ed0d458252cd
+      SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: https://localhost:4443/sso/sp/consume/76e3dfc5-bb6f-43d9-ba37-ed0d458252cd
+      SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: https://localhost:4443/sso/sp/logout/76e3dfc5-bb6f-43d9-ba37-ed0d458252cd
+      SIMPLESAMLPHP_SP_ENTITY_ID2: https://localhost:4443/sso/sp/metadata/7fe4fa56-a642-40ac-9e98-bcf6c91be1b3
+      SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE2: https://localhost:4443/sso/sp/consume/7fe4fa56-a642-40ac-9e98-bcf6c91be1b3
+      SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE2: https://localhost:4443/sso/sp/logout/7fe4fa56-a642-40ac-9e98-bcf6c91be1b3
+volumes:
+  postgres:
+  pgadmin:
+  idp:

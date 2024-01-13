@@ -1,0 +1,47 @@
+<header class="px-4 sm:px-6 lg:px-8">
+  <div class="flex md:flex-row flex-col md:items-center justify-between border-b border-zinc-100 py-3 text-sm gap-4 md:gap-0">
+    <.link navigate={~p"/"}>
+    <div class="flex">
+      <div class="flex flex-col text-black">
+        <div class="self-end">Metrist</div>
+        <div class="self-end">S3Gui</div>
+      </div>
+      <div class="border-l-2 border-orange-500 ml-2 mr-2"></div>
+      <div>
+        <Heroicons.folder_open class="w-10 h-10 stroke-orange-500" />
+      </div>
+    </div>
+    </.link>
+    <div class="flex md:flex-row flex-col md:items-center gap-4 font-semibold leading-6 text-zinc-900" x-data="{}">
+      <%= if not is_nil(@current_user) do %>
+      <.dropdown label="Navigate">
+        <.dropdown_menu_item link_type="live_redirect" to="/">
+          <Heroicons.home class="w-5 h-5 stroke-gray" />
+          Home
+        </.dropdown_menu_item>
+        <%= if @current_user.account.owner_id == @current_user.id do %>
+        <.dropdown_menu_item link_type="live_redirect" to="/aws-setup">
+          <Heroicons.adjustments_horizontal class="w-5 h-5 stroke-gray" />
+          Account setup
+        </.dropdown_menu_item>
+        <% end %>
+      </.dropdown>
+      <% end %>
+      <div>
+      <%=  if !is_nil(@current_user) do %>
+      Logged in as <%= @current_user.email %>
+      <a
+        href={"/logout"} >
+        Sign Out
+      </a>
+      <% end %>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="px-4 py-4 sm:px-6 lg:px-8">
+  <div class="mx-auto">
+    <.flash_group flash={@flash} />
+    <%= @inner_content %>
+  </div>
+</main>

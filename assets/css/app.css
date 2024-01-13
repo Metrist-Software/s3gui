@@ -1,0 +1,15 @@
+@import "tailwindcss/base";
+@import "../../deps/petal_components/assets/default.css";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
+a {
+    @apply text-primary-600 hover:text-primary-300
+}
+
+code {
+    @apply text-secondary-700
+}
+
+.phx-submit-loading button { display: none; }

@@ -1,0 +1,23 @@
+<.header>
+  Get started with S3Gui
+</.header>
+
+<div class="md:w-2/3 md:m-auto">
+  <%= if @live_action == :new do %>
+  <.live_component
+    module={S3GuiWeb.GettingStarted.FormComponent}
+    id={:new}
+    title={@page_title}
+    identity_provider={@identity_provider}
+  />
+  <% end %>
+
+  <%= if @live_action == :login_from_idp do %>
+    <div>
+    You can now login to S3Gui through your IDP at <a href={"#{get_login_url(@identity_provider)}"} target="_blank"><%= get_login_url(@identity_provider) %></a>
+    </div>
+    <div class="mt-5">
+    After a succesful login, you will be asked to continue setting up your account.
+    </div>
+  <% end %>
+</div>
